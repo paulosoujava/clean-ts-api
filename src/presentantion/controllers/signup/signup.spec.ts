@@ -50,7 +50,7 @@ const makeSut = (): SytTypes => {
 
 describe('SignUp Controller', () => {
   test('should return 400 if no name is provided', async () => {
-    const { sut } = await makeSut()
+    const { sut } = makeSut()
     const httpRequest = {
       body: {
         email: 'any_email@email.com',
@@ -63,7 +63,7 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new MissingParamError('name'))
   })
   test('should return 400 if no email is provided', async () => {
-    const { sut } = await makeSut()
+    const { sut } = makeSut()
     const httpRequest = {
       body: {
         name: 'any_name',
@@ -76,7 +76,7 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new MissingParamError('email'))
   })
   test('should return 400 if no password is provided', async () => {
-    const { sut } = await makeSut()
+    const { sut } = makeSut()
     const httpRequest = {
       body: {
         name: 'any_name',
@@ -89,7 +89,7 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new MissingParamError('password'))
   })
   test('should return 400 if no password confirmation fails', async () => {
-    const { sut } = await makeSut()
+    const { sut } = makeSut()
     const httpRequest = {
       body: {
         name: 'any_name',
@@ -103,7 +103,7 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new InvalidParamError('passwordConfirmation'))
   })
   test('should return 400 if no passwordConfirmation is provided', async () => {
-    const { sut } = await makeSut()
+    const { sut } = makeSut()
     const httpRequest = {
       body: {
         name: 'any_name',
@@ -116,7 +116,7 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new MissingParamError('passwordConfirmation'))
   })
   test('should return 400 if an invalid email  is provided', async () => {
-    const { sut, emailValidatorStub } = await makeSut()
+    const { sut, emailValidatorStub } = makeSut()
     jest.spyOn(emailValidatorStub, 'isValid').mockReturnValueOnce(false)
     const httpRequest = {
       body: {
@@ -145,7 +145,7 @@ describe('SignUp Controller', () => {
     expect(isValidSpy).toHaveBeenCalledWith('any_email@email.com')
   })
   test('should return 500 if emvailvalidator throws', async () => {
-    const emailValidatorStub = await makeEmailValidatorWithError()
+    const emailValidatorStub = makeEmailValidatorWithError()
     const sut = new SignUpController(emailValidatorStub, null)
     const httpRequest = {
       body: {
@@ -162,7 +162,7 @@ describe('SignUp Controller', () => {
   // o mesmo que o de cima porem com mock direto no jest sem a
   // necessidade de um makeSutWithError
   test('should return 500 if emvailvalidator throws ', async () => {
-    const { sut, emailValidatorStub } = await makeSut()
+    const { sut, emailValidatorStub } = makeSut()
     jest.spyOn(emailValidatorStub, 'isValid').mockImplementation(() => {
       throw new Error()
     })
@@ -197,9 +197,9 @@ describe('SignUp Controller', () => {
     })
   })
   test('should return 500 if addAccount throws ', async () => {
-    const { sut, addAccountStub } = await makeSut()
-    jest.spyOn(addAccountStub, 'add').mockImplementation(() => {
-      throw new Error()
+    const { sut, addAccountStub } = makeSut()
+    jest.spyOn(addAccountStub, 'add').mockImplementation(async () => {
+      return new Promise((resolve, reject) => reject(new Error()))
     })
     const httpRequest = {
       body: {
