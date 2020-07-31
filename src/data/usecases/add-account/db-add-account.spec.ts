@@ -1,26 +1,44 @@
 import { DbAddAccount } from './db-add-account'
-import { Encrypter } from '../../protocols/encrypter'
+import { Encrypter, AddAccountModel, AddAccountRepository, AccountModel } from './bd-add-account-protocols'
 
-interface SutTypes {
-  sut: DbAddAccount
-  encrypteStub: Encrypter
-}
 const makeEncrypter = (): Encrypter => {
   class EncrypterStub implements Encrypter {
     async encrypt (value: string): Promise<string> {
-      return new Promise(resolve => resolve('hased_password'))
+      return new Promise(resolve => resolve('hashed_password'))
     }
   }
   return new EncrypterStub()
 }
+const makeAddAccountRepository = (): AddAccountRepository => {
+  class AddAccountRepositoryStub implements AddAccountRepository {
+    async add (accountData: AddAccountModel): Promise<AccountModel> {
+      const fakeAccount = {
+        id: 'valid_id',
+        name: 'valid_name',
+        email: 'valid_email@email.com',
+        password: 'hashed_password'
+      }
+      return new Promise(resolve => resolve(fakeAccount))
+    }
+  }
+  return new AddAccountRepositoryStub()
+}
+interface SutTypes {
+  sut: DbAddAccount
+  encrypteStub: Encrypter
+  addAccountRepositoryStub: AddAccountRepository
+}
 const makeSut = (): SutTypes => {
   const encrypteStub = makeEncrypter()
-  const sut = new DbAddAccount(encrypteStub)
+  const addAccountRepositoryStub = makeAddAccountRepository()
+  const sut = new DbAddAccount(encrypteStub, addAccountRepositoryStub)
   return {
     sut,
-    encrypteStub
+    encrypteStub,
+    addAccountRepositoryStub
   }
 }
+
 describe('DbAddAccount Usecase', () => {
   test('should call encrypter with correct password',async () => {
     const { encrypteStub, sut } = makeSut()
@@ -43,5 +61,20 @@ describe('DbAddAccount Usecase', () => {
     }
     const promise = sut.add(accountData)
     await expect(promise).rejects.toThrow()
+  })
+  test('should call addaccountrepositiry with correct values',async () => {
+    const { addAccountRepositoryStub, sut } = makeSut()
+    const addSpy = jest.spyOn(addAccountRepositoryStub, 'add')
+    const accountData = {
+      name: 'valid_name',
+      email: 'valid_email@email.com',
+      password: 'valid_password'
+    }
+    await sut.add(accountData)
+    expect(addSpy).toHaveBeenCalledWith({
+      name: 'valid_name',
+      email: 'valid_email@email.com',
+      password: 'hashed_password'
+    })
   })
 })
